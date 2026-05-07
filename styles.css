@@ -1,52 +1,47 @@
-nav ul li  {
-    background-color: #ADD8E6;
-    border: 1px solid black;
-    border-radius: 6px;
-    
+body {
+    font-family: Arial;
 }
 
-nav ul li a:hover {
-    background-color: #87CEEB; 
-    color:white;             
-    transition: 0.3s;   
-}
 nav ul {
     list-style-type: none;
     padding: 0;
     margin: 0;
-  
 }
 
 nav ul li {
+    background-color: #ADD8E6;
+    border: 1px solid black;
+    border-radius: 6px;
     display: inline-block;
-      list-style-type: none;
     margin: 0 5px;
-
 }
 
+nav ul li a:hover {
+    background-color: #87CEEB;
+    color: white;
+    transition: 0.3s;
+}
 
 #liveGames {
-    display: flex; 
-    flex-wrap: wrap; 
-    gap: 20px; 
-    width: 100%;    
-    justify-content: center; 
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    width: 100%;
+    justify-content: center;
     margin-bottom: 30px;
 }
-
 
 .game-card {
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 8px;
     padding: 15px;
-    width: 250px; 
+    width: 250px;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
 }
-
 
 .game-card div {
     display: flex;
@@ -59,22 +54,6 @@ nav ul li {
 .game-card p {
     margin: 5px 0;
     font-size: 14px;
-}
-
-body {
-    font-family: Arial;
-}
-
-div {
-    display: flex;
-    gap: 10px;
-    padding: 20px;
-    background: white;
-    border-radius: 8px;
-
-
-    max-width: 400px;
-    margin-bottom: 30px;
 }
 
 table {
@@ -94,47 +73,42 @@ td {
     border-bottom: 1px solid #eee;
 }
 
-#playerStats, .search-area{
-     border: 1px solid orange;
+#playerStats,
+.search-area {
+    border: 1px solid orange;
 }
 
 #compareGrid {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border:1px solid #ffb800;
-  gap: 20px;
-  padding: 20px;
-  width: 100%;            
-  min-width: fit-content;  
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #ffb800;
+    gap: 20px;
+    padding: 20px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-
 .player-card {
-  background: #fff;
-  border: 2px solid #ffb800;
-  border-radius: 12px;
-  padding: 20px;
-  width: 350px;           
-      
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    background: #fff;
+    border: 2px solid #ffb800;
+    border-radius: 12px;
+    padding: 20px;
+    width: 350px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .player-name {
-  margin: 0 0 15px 0;
-  font-size: 1.8rem;
+    margin: 0 0 15px 0;
+    font-size: 1.8rem;
 }
-
 
 .statsContainer {
-  display: grid;
-  grid-template-columns: auto auto; 
-  gap: 10px;
-
-  padding: 15px;
-
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 10px;
+    padding: 15px;
 }
-
 
 tr:hover {
     color: blue
@@ -144,16 +118,68 @@ thead {
     background: linear-gradient(135deg, #ff8a00, #ff5722);
 }
 
-
 #submitPlayer {
     color: black;
     border-radius: 6px;
-
-
-
 }
 
 #submitPlayer:hover {
     background-color: #1a7cad;
     transition: 0.5s;
+}
+
+
+@media screen and (max-width: 450px) {
+    body {
+        font-size: 14px;
+    }
+
+
+    nav ul {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    nav ul li {
+        display: block;
+        margin: 0;
+        text-align: center;
+    }
+
+
+    #PlayerStats,
+    .search-area,
+    #compareGrid,
+    .player-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+
+    .player-card {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+
+    table {
+        font-size: 12px;
+        width: 100%;
+    }
+
+    th,
+    td {
+        padding: 8px 5px;
+    }
+
+
+    .player-name {
+        font-size: 1.2rem;
+    }
 }
