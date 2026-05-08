@@ -1,16 +1,17 @@
 
-
 let nbaData = [];
 let playerData = [];
 let apiData = [];
+
 const seasonCache = {};
+let nbaTeamIds = {};
+let liveDataLoaded = false;
+let playerPhotos = {};
 
 const API_KEY = '75d593d10d0e92056e834e5b58bd72e8';
 const base_url = 'https://v1.basketball.api-sports.io';
 const nba_league_id = 12;
 const current_season = '2024-2025';
-let playerPhotos = {};
-let liveDataLoaded = false;
 
 const requestOptions = {
     method: "GET",
@@ -20,68 +21,71 @@ const requestOptions = {
     }
 };
 
-let nbaTeamIds={};
 
-async function loadTeamIds(){
-    try{
-        const response = await fetch("/json/nba_team_id.json");
-        nbaTeamIds =await response.json();
-        console.log(nbaTeamIds)
+document.addEventListener("DOMContentLoaded", init);
 
+async function init() {
+    await loadTeamIds();
+
+    const submitPlayer = document.getElementById("submitPlayer");
+    if (submitPlayer) {
+        submitPlayer.addEventListener("click", submitPlayerClick);
     }
-    catch(error){
+
+    const compareBtn = document.getElementById("compareBtn");
+    if (compareBtn) {
+        compareBtn.addEventListener("click", comparePlayers);
+    }
+}
+
+
+async function loadTeamIds() {
+    try {
+        const response = await fetch("/json/nba_team_id.json");
+        nbaTeamIds = await response.json();
+    } catch (error) {
         console.log(error);
     }
 }
 
-document.addEventListener("DOMContentLoaded", init);
-async function init() {
-    //get the team ids
-    await loadTeamIds();
 
-
-    let submitPlayer = document.getElementById("submitPlayer");
-    if (submitPlayer) submitPlayer.addEventListener("click", submitPlayerClick);
-
-    const compareBtn = document.getElementById("compareBtn");
-    if (compareBtn) compareBtn.addEventListener("click", comparePlayers);
-}
-
-// loads one season's games + players, caches the result so repeat picks are instant.
 async function loadSeason(year) {
     if (seasonCache[year]) return seasonCache[year];
+
     try {
         const [gamesRes, playersRes] = await Promise.all([
             fetch(`/json/games_${year}.json`),
             fetch(`/json/players_${year}.json`)
         ]);
+
         seasonCache[year] = {
             games: await gamesRes.json(),
             players: await playersRes.json()
         };
+
         return seasonCache[year];
-    }
-    catch (error) {
+    } catch (error) {
         console.log(`Error loading season ${year}: ${error}`);
         return { games: [], players: [] };
     }
 }
 
-// Fetches live game data from the API — only runs on first search
+
 async function loadLiveData() {
     if (liveDataLoaded) return;
 
     try {
-        const gameRes = await fetch(`${base_url}/games?league=${nba_league_id}&season=${current_season}`, requestOptions);
-        const gamesData = await gameRes.json();
+        const [gamesRes, oddsRes, playerRes] = await Promise.all([
+            fetch(`${base_url}/games?league=${nba_league_id}&season=${current_season}`, requestOptions),
+            fetch(`${base_url}/odds?league=${nba_league_id}&season=${current_season}`, requestOptions),
+            fetch(`${base_url}/players?league=${nba_league_id}&season=${current_season}`, requestOptions)
+        ]);
 
-        const oddsRes = await fetch(`${base_url}/odds?league=${nba_league_id}&season=${current_season}`, requestOptions);
+        const gamesData = await gamesRes.json();
         const oddsData = await oddsRes.json();
-
-        const playerRes = await fetch(`${base_url}/players?league=${nba_league_id}&season=${current_season}`, requestOptions);
         const livePlayerData = await playerRes.json();
 
-        // Normalize player photos using NBA.com CDN
+        // Cache player photos
         livePlayerData.response.forEach(p => {
             const nbaId =
                 p.id ||
@@ -99,62 +103,121 @@ async function loadLiveData() {
         apiData = gamesData.response.map(game => {
             const gameOdds = oddsData.response?.find(o => o.game.id === game.id);
 
-            const nbaTeamLogo = id =>
-                `https://cdn.nba.com/logos/nba/${id}/global/L/logo.svg`;
-
             return {
                 GAME_ID: game.id,
                 GAME_DATE: game.date,
                 TEAM_NAME: `${game.teams.home.name} vs ${game.teams.away.name}`,
                 STATUS: game.status.long,
                 SCORE: `${game.scores.home.total} - ${game.scores.away.total}`,
-                ODDS: gameOdds ? `Home: ${gameOdds.bookmakers[0].bets[0].values[0].odd}` : 'N/A',
-                HOME_LOGO: nbaTeamLogo(game.teams.home.id),
-                AWAY_LOGO: nbaTeamLogo(game.teams.away.id)
+                ODDS: gameOdds
+                    ? `Home: ${gameOdds.bookmakers[0].bets[0].values[0].odd}`
+                    : "N/A",
+                HOME_LOGO: `https://cdn.nba.com/logos/nba/${game.teams.home.id}/global/L/logo.svg`,
+                AWAY_LOGO: `https://cdn.nba.com/logos/nba/${game.teams.away.id}/global/L/logo.svg`
             };
         });
 
         renderLiveGames(apiData);
         liveDataLoaded = true;
-    }
-    catch (error) {
+    } catch (error) {
         console.log(`Error loading live data: ${error}`);
     }
 }
 
+
+function computeSeasonAverages(games) {
+    if (!games.length) return null;
+
+    const gp = games.length;
+    const sum = key =>
+        games.reduce((total, game) => total + (Number(game[key]) || 0), 0);
+
+    const totalFGM = sum("FGM");
+    const totalFGA = sum("FGA");
+    const totalFG3M = sum("FG3M");
+    const totalFG3A = sum("FG3A");
+    const totalFTM = sum("FTM");
+    const totalFTA = sum("FTA");
+
+    const avgMin = gp > 0 ? sum("MIN") / gp : 0;
+
+    return {
+        PLAYER_NAME: games[0].PLAYER_NAME,
+        SEASON_YEAR: games[0].SEASON_YEAR,
+        PLAYER_ID:
+            games[0].PLAYER_ID ||
+            games[0].PERSON_ID ||
+            games[0].ID ||
+            null,
+
+        GP: gp,
+        PTS: +(sum("PTS") / gp).toFixed(1),
+        REB: +(sum("REB") / gp).toFixed(1),
+        AST: +(sum("AST") / gp).toFixed(1),
+        STL: +(sum("STL") / gp).toFixed(1),
+
+        FG_PCT: totalFGA > 0 ? totalFGM / totalFGA : 0,
+        FG3_PCT: totalFG3A > 0 ? totalFG3M / totalFG3A : 0,
+        FT_PCT: totalFTA > 0 ? totalFTM / totalFTA : 0,
+
+        MIN_SEC: avgMin.toFixed(2)
+    };
+}
+
+
 async function comparePlayers() {
-    const year = parseInt(document.getElementById("compareYear").value);
-    const name1 = document.getElementById("p1Input").value.toLowerCase();
-    const name2 = document.getElementById("p2Input").value.toLowerCase();
+    const yearInput = document.getElementById("compareYear");
+    const p1Input = document.getElementById("p1Input");
+    const p2Input = document.getElementById("p2Input");
     const errorDiv = document.getElementById("errorDiv");
 
+    const year = parseInt(yearInput?.value);
+    const name1 = p1Input?.value.trim().toLowerCase();
+    const name2 = p2Input?.value.trim().toLowerCase();
+
     if (!name1 || !name2) {
-        errorDiv.innerHTML = "<p>Please enter both player names</p>";
+        errorDiv.innerText = "Please enter two player names to compare.";
         return;
     }
 
-    if(year<2004 || year>2026){
-        errorDiv.innerHTML = "<p>Please enter a year between 2004 and 2026.</p>";
+    if (isNaN(year) || year < 2004 || year > 2026) {
+        errorDiv.innerText = "Please enter a year between 2004 and 2026";
         return;
-
     }
 
     const season = await loadSeason(year);
-    const player1 = season.players.find(p => p.PLAYER_NAME.toLowerCase().includes(name1));
-    const player2 = season.players.find(p => p.PLAYER_NAME.toLowerCase().includes(name2));
+    const players = season.players || [];
 
-    if (!player1 || !player2) {
-        console.log('player not found');
+    const p1Rows = players.filter(p =>
+        (p.PLAYER_NAME || "").toLowerCase().includes(name1)
+    );
+
+    const p2Rows = players.filter(p =>
+        (p.PLAYER_NAME || "").toLowerCase().includes(name2)
+    );
+
+    if (!p1Rows.length || !p2Rows.length) {
+        errorDiv.innerText = "One or both players not found for that season.";
         return;
     }
 
-    errorDiv.innerHTML = "";
-    renderPlayerCard("player1Card", player1);
-    renderPlayerCard("player2Card", player2);
+    errorDiv.innerText = "";
+
+    renderPlayerCard(
+        "player1Card",
+        computeSeasonAverages(p1Rows)
+    );
+
+    renderPlayerCard(
+        "player2Card",
+        computeSeasonAverages(p2Rows)
+    );
 }
+
 
 function renderPlayerCard(elementId, player) {
     const container = document.getElementById(elementId);
+    if (!container || !player) return;
 
     const nbaId =
         player.PLAYER_ID ||
@@ -168,47 +231,59 @@ function renderPlayerCard(elementId, player) {
         : "https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg";
 
     container.innerHTML = `
-      <div class="player-card">
-        <img src="${photo}" style="width:120px;border-radius:10px;margin-bottom:10px;">
-        <h2>${player.PLAYER_NAME}</h2>
-        <p><strong>Season:</strong> ${player.SEASON_YEAR || 'N/A'}</p>
-        <ul style="list-style: none; padding: 0;">
-          <li><strong>Points:</strong> ${player.PTS || 0}</li>
-          <li><strong>Rebounds:</strong> ${player.REB || 0}</li>
-          <li><strong>Assists:</strong> ${player.AST || 0}</li>
-          <li><strong>Steals:</strong> ${player.STL || 0}</li>
-          <li><strong>FG%:</strong> ${(player.FG_PCT * 100).toFixed(1)}%</li>
-          <li><strong>Minutes:</strong> ${player.MIN_SEC || '0:00'}</li>
-        </ul>
-      </div>
+        <div class="player-card">
+            <img 
+                src="${photo}" 
+                alt="${player.PLAYER_NAME}"
+                style="width:120px;border-radius:10px;margin-bottom:10px;"
+            >
+
+            <h2>${player.PLAYER_NAME}</h2>
+
+            <p><strong>Season:</strong> ${player.SEASON_YEAR || "N/A"}</p>
+
+            <ul style="list-style:none;padding:0;">
+                <li><strong>Games:</strong> ${player.GP}</li>
+                <li><strong>Points:</strong> ${player.PTS}</li>
+                <li><strong>Rebounds:</strong> ${player.REB}</li>
+                <li><strong>Assists:</strong> ${player.AST}</li>
+                <li><strong>Steals:</strong> ${player.STL}</li>
+                <li><strong>FG%:</strong> ${(player.FG_PCT * 100).toFixed(1)}%</li>
+                <li><strong>Minutes:</strong> ${player.MIN_SEC}</li>
+            </ul>
+        </div>
     `;
 }
 
+
 async function submitPlayerClick() {
-    
     const year = parseInt(document.getElementById("year").value);
+    const searchInput = document.getElementById("searchInput").value.trim();
     const searchMessage = document.getElementById("searchMessage");
-    const searchInput = document.getElementById("searchInput").value;
+
     if (!searchInput) {
         searchMessage.innerText = "Please enter a name or team.";
         renderTable([]);
         return;
     }
-    if(year<2004 || year>2026){
-        searchMessage.innerText = "Please enter a year between 2004 and 2026";
-        return;
 
+    if (year < 2004 || year > 2026) {
+        searchMessage.innerText = "Please enter a year between 2004 and 2026.";
+        return;
     }
 
     searchMessage.innerText = "Loading...";
 
     const season = await loadSeason(year);
+
     nbaData = season.games;
     playerData = season.players;
 
     await loadLiveData();
+
     search(searchInput);
 }
+
 
 function search(term) {
     const searchTerm = term.toLowerCase();
@@ -220,23 +295,54 @@ function search(term) {
 
     searchMessage.innerText = "";
 
-    const filteredTeams = nbaData.filter(game => {
-        const gameDate = new Date(game.GAME_DATE);
-        const matchesTerm = game.TEAM_NAME.toLowerCase().includes(searchTerm);
-        const matchesSeason = gameDate >= seasonStart && gameDate <= seasonEnd;
-        return matchesTerm && matchesSeason;
-    });
+    // Team/game filtering
+    const filteredTeams = nbaData
+        .filter(game => {
+            const gameDate = new Date(game.GAME_DATE);
+
+            return (
+                game.TEAM_NAME.toLowerCase().includes(searchTerm) &&
+                gameDate >= seasonStart &&
+                gameDate <= seasonEnd
+            );
+        })
+    .map(game => ({
+    ...game,
+    TEAM_LOGO: game.TEAM_ID
+        ? `https://cdn.nba.com/logos/nba/${game.TEAM_ID}/global/L/logo.svg`
+        : null
+}));
+
 
     const filteredPlayers = playerData.filter(player => {
         const gameDate = new Date(player.GAME_DATE);
-        const matchesTerm = player.PLAYER_NAME.toLowerCase().includes(searchTerm);
-        const matchesSeason = gameDate >= seasonStart && gameDate <= seasonEnd;
 
-        const team = player.TEAM_NAME?.toLowerCase();
-        const teamId = nbaTeamIds[team];
+        const matchesTerm =
+            player.PLAYER_NAME.toLowerCase().includes(searchTerm);
 
-        player.HOME_LOGO = teamId ? `https://cdn.nba.com/logos/nba/${teamId}/global/L/logo.svg` : "";
-        player.AWAY_LOGO = player.HOME_LOGO;
+        const matchesSeason =
+            gameDate >= seasonStart &&
+            gameDate <= seasonEnd;
+
+        const playerAbbr = player.TEAM_ABBREVIATION;
+
+        const matchupParts = player.MATCHUP.split(" ");
+
+        const opponentAbbr = matchupParts.find(
+            part =>
+                part !== playerAbbr &&
+                part !== "@" &&
+                part !== "vs."
+        );
+
+        const opponentId = nbaTeamIds[opponentAbbr];
+
+        player.HOME_LOGO =
+            `https://cdn.nba.com/logos/nba/${player.TEAM_ID}/global/L/logo.svg`;
+
+        player.AWAY_LOGO = opponentId
+            ? `https://cdn.nba.com/logos/nba/${opponentId}/global/L/logo.svg`
+            : "";
 
         return matchesTerm && matchesSeason;
     });
@@ -246,9 +352,10 @@ function search(term) {
     );
 
     const allResults = filteredPlayers.concat(filteredTeams);
+
     renderTable(allResults.slice(0, 50));
 
-    if (allResults.length === 0) {
+    if (!allResults.length) {
         searchMessage.innerText = `No results found for ${term}`;
     }
 
@@ -261,14 +368,31 @@ function renderTable(data) {
 
     headerRow.innerHTML = "";
     tableBody.innerHTML = "";
-    if (data.length === 0) return;
 
-    let columns = [];
-    if (data[0].PLAYER_NAME) {
-        columns = ["PLAYER_NAME", "HOME_LOGO", "GAME_DATE", "TEAM_NAME", "AWAY_LOGO", "MATCHUP", "PTS", "REB", "AST", "WL"];
-    } else {
-        columns = ["GAME_DATE", "TEAM_NAME", "MATCHUP", "PTS", "REB", "AST", "WL"];
-    }
+    if (!data.length) return;
+
+    const columns = data[0].PLAYER_NAME
+        ? [
+              "PLAYER_NAME",
+              "HOME_LOGO",
+              "GAME_DATE",
+              "TEAM_NAME",
+              "AWAY_LOGO",
+              "MATCHUP",
+              "PTS",
+              "REB",
+              "AST",
+              "WL"
+          ]
+        : [
+              "GAME_DATE",
+              "TEAM_NAME",
+              "MATCHUP",
+              "PTS",
+              "REB",
+              "AST",
+              "WL"
+          ];
 
     columns.forEach(col => {
         const th = document.createElement("th");
@@ -297,20 +421,28 @@ function renderTable(data) {
     });
 }
 
+
 function renderLiveGames(games) {
     const liveDiv = document.getElementById("liveGames");
+
+    if (!liveDiv) return;
+
     liveDiv.innerHTML = "";
 
     games.forEach(game => {
         const card = document.createElement("div");
+
         card.className = "game-card";
 
         card.innerHTML = `
-            <p>${game.GAME_DATE.split('T')[0]}</p>
+            <p>${game.GAME_DATE.split("T")[0]}</p>
+
             <div>
-                <img width="40" src="${game.HOME_LOGO}"> vs 
+                <img width="40" src="${game.HOME_LOGO}">
+                vs
                 <img width="40" src="${game.AWAY_LOGO}">
             </div>
+
             <p>${game.TEAM_NAME}</p>
             <p>Score: ${game.SCORE}</p>
             <p>${game.STATUS}</p>

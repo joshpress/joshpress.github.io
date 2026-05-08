@@ -50,6 +50,15 @@ nav ul li:hover a {
     padding: 20px;
     box-sizing: border-box;
 }
+.search-area, #PlayerStats, #errorDiv{
+    gap:1px;
+    padding: 10px;
+    display:grid;
+    max-width: 100%;
+    transform: scale(1.4);
+    align-items: center;
+    place-items: center;
+}
 
 .game-card {
     background: #fff;

@@ -17,18 +17,18 @@
   <h1>NBA Player Stats</h1>
 
   <form>
-    <p>Get the stats about your favorite NBA Basketball Players from 2004!</p>
+   <h2>Get the stats about your favorite NBA Basketball Players from 2004!</h2><br>
     <div id="PlayerStats">
-
+ 
       <label for="playerName">Team/Player Name:</label><br>
       <input type="text" id="searchInput" name="playerName" required><br>
       <label for ="year">Year</label>
       <input type="number" id="year" min="2004" value ="2004" max="2026">
-  
+    <p id="searchMessage"></p>
     </div>
  <br> <button id="submitPlayer" type="button">Get Stats</button>
   </form>
-  <p id="searchMessage"></p>
+
 
   
   <table id="statsTable">
