@@ -104,7 +104,11 @@ async function comparePlayers() {
     const year = parseInt(document.getElementById("compareYear").value);
     const name1 = document.getElementById("p1Input").value.toLowerCase();
     const name2 = document.getElementById("p2Input").value.toLowerCase();
-
+    const errorDiv=document.getElementById("errorDiv")
+    if (!name1 || !name2) {
+        errorDiv.innerHTML = "<p>Please enter both player names</p>";
+        return;
+    }
     const season = await loadSeason(year);
     const player1 = season.players.find(p => p.PLAYER_NAME.toLowerCase().includes(name1));
     const player2 = season.players.find(p => p.PLAYER_NAME.toLowerCase().includes(name2));
@@ -113,7 +117,8 @@ async function comparePlayers() {
         console.log('player not found');
         return;
     }
-
+   
+    errorDiv.innerHTML="";
     renderPlayerCard("player1Card", player1);
     renderPlayerCard("player2Card", player2);
 }
@@ -141,6 +146,13 @@ function renderPlayerCard(elementId, player) {
 async function submitPlayerClick() {
     const year = parseInt(document.getElementById("year").value);
     const searchMessage = document.getElementById("searchMessage");
+    const searchInput = document.getElementById("searchInput").value;
+    //if no search term is entered
+     if (!searchInput) {
+        searchMessage.innerText = "Please enter a name or team.";
+        renderTable([]);
+        return;
+    }
     searchMessage.innerText = "Loading...";
 
     const season = await loadSeason(year);
@@ -148,7 +160,7 @@ async function submitPlayerClick() {
     playerData = season.players;
 
     await loadLiveData();
-    const searchInput = document.getElementById("searchInput").value;
+  
     search(searchInput);
 }
 
@@ -163,11 +175,6 @@ function search(term) {
     const seasonEnd = new Date(year + 1, 5, 30);
 
     searchMessage.innerText = "";
-    if (!searchTerm) {
-        searchMessage.innerText = "Please enter a name or team.";
-        renderTable([]);
-        return;
-    }
     //filter by name and year
     const filteredTeams = nbaData.filter(game => {
         const gameDate = new Date(game.GAME_DATE)
