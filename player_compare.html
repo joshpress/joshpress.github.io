@@ -1,6 +1,6 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <link rel="icon" href="images/icon.png" type="image/x-icon">
     <title>NBA Stats Player Comparison</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="styles.css">
@@ -17,27 +17,32 @@
     <h1>NBA Player Stats</h1>
 
     <h2>Player Comparison</h2>
+    <h2>Compare your favorite NBA player!</h2>
+     <div id="imgDiv">
+      <img src="/images/compare-image.jpg">
+    </div>
 
     <div class="search-area">
         <input type="text" id="p1Input" placeholder="First Player">
         <input type="text" id="p2Input" placeholder="Second Player">
         <label for="compareYear">Year</label>
-        <input type="number" id="compareYear" min="2004" max="2025" value="2024">    
-    </div>
-     <div id="errorDiv"></div>
-      <br> <button id="compareBtn">Compare Stats</button>
-<div id="compareGrid">
-    <div id="player1Card" class="card">
-
-        <div class="statsContainer" id="player1Stats">
-          
-        </div>
+        <input type="number" id="compareYear" min="2004" max="2025" value="2024">
+        <div id="errorDiv"></div>
+        <button id="compareBtn">Compare Stats</button>
     </div>
 
-    <div id="player2Card" class="card">
-        
-        <div class="statsContainer" id="player2Stats">
-      
+    <div id="compareGrid">
+        <div id="player1Card" class="card">
+
+            <div class="statsContainer" id="player1Stats">
+
+            </div>
+        </div>
+
+        <div id="player2Card" class="card">
+
+            <div class="statsContainer" id="player2Stats">
+
+            </div>
         </div>
     </div>
-</div>

@@ -180,8 +180,8 @@ async function comparePlayers() {
         return;
     }
 
-    if (isNaN(year) || year < 2004 || year > 2026) {
-        errorDiv.innerText = "Please enter a year between 2004 and 2026";
+    if (isNaN(year) || year < 2004 || year > 2025) {
+        errorDiv.innerText = "Please enter a year between 2004 and 2025";
         return;
     }
 
@@ -202,20 +202,23 @@ async function comparePlayers() {
     }
 
     errorDiv.innerText = "";
-
+    const player1Data= computeSeasonAverages(p1Rows);
+    const player2Data=computeSeasonAverages(p2Rows);
     renderPlayerCard(
         "player1Card",
-        computeSeasonAverages(p1Rows)
+        player1Data,
+        player2Data
     );
 
     renderPlayerCard(
         "player2Card",
-        computeSeasonAverages(p2Rows)
+        player2Data,
+        player1Data
     );
 }
 
 
-function renderPlayerCard(elementId, player) {
+function renderPlayerCard(elementId, player,comparisonPlayer) {
     const container = document.getElementById(elementId);
     if (!container || !player) return;
 
@@ -229,7 +232,17 @@ function renderPlayerCard(elementId, player) {
     const photo = nbaId
         ? `https://cdn.nba.com/headshots/nba/latest/260x190/${nbaId}.png`
         : "https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg";
-
+  //sets up style based on comparison
+    const getStatStyle = (statKey) => {
+        if (!comparisonPlayer) return "";
+        const val1 = player[statKey];
+        const val2 = comparisonPlayer[statKey];
+        
+        if (val1 > val2) return 'style="color: green; font-weight: bold;"';
+        if (val1 < val2) return 'style="color: red;"';
+        return "";
+    };
+    //render the table based on the stat colors
     container.innerHTML = `
         <div class="player-card">
             <img 
@@ -239,20 +252,20 @@ function renderPlayerCard(elementId, player) {
             >
 
             <h2>${player.PLAYER_NAME}</h2>
-
             <p><strong>Season:</strong> ${player.SEASON_YEAR || "N/A"}</p>
 
             <ul style="list-style:none;padding:0;">
-                <li><strong>Games:</strong> ${player.GP}</li>
-                <li><strong>Points:</strong> ${player.PTS}</li>
-                <li><strong>Rebounds:</strong> ${player.REB}</li>
-                <li><strong>Assists:</strong> ${player.AST}</li>
-                <li><strong>Steals:</strong> ${player.STL}</li>
-                <li><strong>FG%:</strong> ${(player.FG_PCT * 100).toFixed(1)}%</li>
+                <li ${getStatStyle('GP')}><strong>Games:</strong> ${player.GP}</li>
+                <li ${getStatStyle('PTS')}><strong>Points:</strong> ${player.PTS}</li>
+                <li ${getStatStyle('REB')}><strong>Rebounds:</strong> ${player.REB}</li>
+                <li ${getStatStyle('AST')}><strong>Assists:</strong> ${player.AST}</li>
+                <li ${getStatStyle('STL')}><strong>Steals:</strong> ${player.STL}</li>
+                <li ${getStatStyle('FG_PCT')}><strong>FG%:</strong> ${(player.FG_PCT * 100).toFixed(1)}%</li>
                 <li><strong>Minutes:</strong> ${player.MIN_SEC}</li>
             </ul>
         </div>
     `;
+
 }
 
 
@@ -267,8 +280,8 @@ async function submitPlayerClick() {
         return;
     }
 
-    if (year < 2004 || year > 2026) {
-        searchMessage.innerText = "Please enter a year between 2004 and 2026.";
+    if (year < 2004 || year > 2025) {
+        searchMessage.innerText = "Please enter a year between 2004 and 2025.";
         return;
     }
 
@@ -279,7 +292,7 @@ async function submitPlayerClick() {
     nbaData = season.games;
     playerData = season.players;
 
-    await loadLiveData();
+  //  await loadLiveData();
 
     search(searchInput);
 }
@@ -359,7 +372,7 @@ function search(term) {
         searchMessage.innerText = `No results found for ${term}`;
     }
 
-    renderLiveGames(filteredApiGames);
+   // renderLiveGames(filteredApiGames);
 }
 
 function renderTable(data) {
