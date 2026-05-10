@@ -208,9 +208,9 @@ tbody tr:hover {
         box-sizing: border-box;
     }
 
-    #home-img img {
-        width: 75%;
-        height: 75%;
+    #imgDiv img {
+       width: 75%;
+       height: 75%;
     }
 
     .search-area label,
