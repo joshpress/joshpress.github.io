@@ -187,13 +187,13 @@ async function comparePlayers() {
 
     const season = await loadSeason(year);
     const players = season.players || [];
-
+    //changed includes to === to not double count names
     const p1Rows = players.filter(p =>
-        (p.PLAYER_NAME || "").toLowerCase().includes(name1)
+        (p.PLAYER_NAME || "").toLowerCase()===name1
     );
 
     const p2Rows = players.filter(p =>
-        (p.PLAYER_NAME || "").toLowerCase().includes(name2)
+        (p.PLAYER_NAME || "").toLowerCase()===name2
     );
 
     if (!p1Rows.length || !p2Rows.length) {
@@ -202,8 +202,8 @@ async function comparePlayers() {
     }
 
     errorDiv.innerText = "";
-    const player1Data= computeSeasonAverages(p1Rows);
-    const player2Data=computeSeasonAverages(p2Rows);
+    const player1Data = computeSeasonAverages(p1Rows);
+    const player2Data = computeSeasonAverages(p2Rows);
     renderPlayerCard(
         "player1Card",
         player1Data,
@@ -218,7 +218,7 @@ async function comparePlayers() {
 }
 
 
-function renderPlayerCard(elementId, player,comparisonPlayer) {
+function renderPlayerCard(elementId, player, comparisonPlayer) {
     const container = document.getElementById(elementId);
     if (!container || !player) return;
 
@@ -232,12 +232,12 @@ function renderPlayerCard(elementId, player,comparisonPlayer) {
     const photo = nbaId
         ? `https://cdn.nba.com/headshots/nba/latest/260x190/${nbaId}.png`
         : "https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg";
-  //sets up style based on comparison
+    //sets up style based on comparison
     const getStatStyle = (statKey) => {
         if (!comparisonPlayer) return "";
         const val1 = player[statKey];
         const val2 = comparisonPlayer[statKey];
-        
+
         if (val1 > val2) return 'style="color: green; font-weight: bold;"';
         if (val1 < val2) return 'style="color: red;"';
         return "";
@@ -292,7 +292,7 @@ async function submitPlayerClick() {
     nbaData = season.games;
     playerData = season.players;
 
-  //  await loadLiveData();
+    //  await loadLiveData();
 
     search(searchInput);
 }
@@ -319,12 +319,12 @@ function search(term) {
                 gameDate <= seasonEnd
             );
         })
-    .map(game => ({
-    ...game,
-    TEAM_LOGO: game.TEAM_ID
-        ? `https://cdn.nba.com/logos/nba/${game.TEAM_ID}/global/L/logo.svg`
-        : null
-}));
+        .map(game => ({
+            ...game,
+            TEAM_LOGO: game.TEAM_ID
+                ? `https://cdn.nba.com/logos/nba/${game.TEAM_ID}/global/L/logo.svg`
+                : null
+        }));
 
 
     const filteredPlayers = playerData.filter(player => {
@@ -372,7 +372,7 @@ function search(term) {
         searchMessage.innerText = `No results found for ${term}`;
     }
 
-   // renderLiveGames(filteredApiGames);
+    // renderLiveGames(filteredApiGames);
 }
 
 function renderTable(data) {
@@ -386,26 +386,26 @@ function renderTable(data) {
 
     const columns = data[0].PLAYER_NAME
         ? [
-              "PLAYER_NAME",
-              "HOME_LOGO",
-              "GAME_DATE",
-              "TEAM_NAME",
-              "AWAY_LOGO",
-              "MATCHUP",
-              "PTS",
-              "REB",
-              "AST",
-              "WL"
-          ]
+            "PLAYER_NAME",
+            "HOME_LOGO",
+            "GAME_DATE",
+            "TEAM_NAME",
+            "AWAY_LOGO",
+            "MATCHUP",
+            "PTS",
+            "REB",
+            "AST",
+            "WL"
+        ]
         : [
-              "GAME_DATE",
-              "TEAM_NAME",
-              "MATCHUP",
-              "PTS",
-              "REB",
-              "AST",
-              "WL"
-          ];
+            "GAME_DATE",
+            "TEAM_NAME",
+            "MATCHUP",
+            "PTS",
+            "REB",
+            "AST",
+            "WL"
+        ];
 
     columns.forEach(col => {
         const th = document.createElement("th");
