@@ -75,7 +75,7 @@ nav ul li:hover a {
 
 .PlayerStats input,
 .search-area input,
-.search-area button {
+.search-area button , #submitPlayer{
     min-width: 250px;
     max-width: 400px;
     padding: 10px 20px;
@@ -259,7 +259,7 @@ tbody tr:hover {
     font-size: 1.2rem;
 }
 
-.search-area button {
+.search-area button , #submitPlayer{
     width: 90%;
     padding: 15px;
     font-size: 1.300rem;
