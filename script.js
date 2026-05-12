@@ -23,7 +23,7 @@ const requestOptions = {
 
 
 document.addEventListener("DOMContentLoaded", init);
-
+//init function to get button clicks
 async function init() {
     await loadTeamIds();
 
@@ -38,7 +38,7 @@ async function init() {
     }
 }
 
-
+//loading team ID json for photos
 async function loadTeamIds() {
     try {
         const response = await fetch("/json/nba_team_id.json");
@@ -48,7 +48,7 @@ async function loadTeamIds() {
     }
 }
 
-
+//caching for season
 async function loadSeason(year) {
     if (seasonCache[year]) return seasonCache[year];
 
@@ -75,6 +75,7 @@ async function loadLiveData() {
     if (liveDataLoaded) return;
 
     try {
+        //getting the season API call
         const [gamesRes, oddsRes, playerRes] = await Promise.all([
             fetch(`${base_url}/games?league=${nba_league_id}&season=${current_season}`, requestOptions),
             fetch(`${base_url}/odds?league=${nba_league_id}&season=${current_season}`, requestOptions),
@@ -109,9 +110,6 @@ async function loadLiveData() {
                 TEAM_NAME: `${game.teams.home.name} vs ${game.teams.away.name}`,
                 STATUS: game.status.long,
                 SCORE: `${game.scores.home.total} - ${game.scores.away.total}`,
-                ODDS: gameOdds
-                    ? `Home: ${gameOdds.bookmakers[0].bets[0].values[0].odd}`
-                    : "N/A",
                 HOME_LOGO: `https://cdn.nba.com/logos/nba/${game.teams.home.id}/global/L/logo.svg`,
                 AWAY_LOGO: `https://cdn.nba.com/logos/nba/${game.teams.away.id}/global/L/logo.svg`
             };
@@ -124,7 +122,7 @@ async function loadLiveData() {
     }
 }
 
-
+//computes stats for player averages
 function computeSeasonAverages(games) {
     if (!games.length) return null;
 
@@ -140,7 +138,7 @@ function computeSeasonAverages(games) {
     const totalFTA = sum("FTA");
 
     const avgMin = gp > 0 ? sum("MIN") / gp : 0;
-
+    //return the averages for the player
     return {
         PLAYER_NAME: games[0].PLAYER_NAME,
         SEASON_YEAR: games[0].SEASON_YEAR,
@@ -166,6 +164,7 @@ function computeSeasonAverages(games) {
 
 
 async function comparePlayers() {
+    //get inputs and year
     const yearInput = document.getElementById("compareYear");
     const p1Input = document.getElementById("p1Input");
     const p2Input = document.getElementById("p2Input");
@@ -189,18 +188,18 @@ async function comparePlayers() {
     const players = season.players || [];
     //changed includes to === to not double count names
     const p1Rows = players.filter(p =>
-        (p.PLAYER_NAME || "").toLowerCase()===name1
+        (p.PLAYER_NAME || "").toLowerCase() === name1
     );
 
     const p2Rows = players.filter(p =>
-        (p.PLAYER_NAME || "").toLowerCase()===name2
+        (p.PLAYER_NAME || "").toLowerCase() === name2
     );
 
     if (!p1Rows.length || !p2Rows.length) {
         errorDiv.innerText = "One or both players not found for that season.";
         return;
     }
-
+    //compute averages and render player card
     errorDiv.innerText = "";
     const player1Data = computeSeasonAverages(p1Rows);
     const player2Data = computeSeasonAverages(p2Rows);
@@ -221,18 +220,18 @@ async function comparePlayers() {
 function renderPlayerCard(elementId, player, comparisonPlayer) {
     const container = document.getElementById(elementId);
     if (!container || !player) return;
-
+    //make sure data exists
     const nbaId =
         player.PLAYER_ID ||
         player.PERSON_ID ||
         player.ID ||
         player.player_id ||
         null;
-
+    //get photo from NBA website, also uses nba_team_id.json
     const photo = nbaId
         ? `https://cdn.nba.com/headshots/nba/latest/260x190/${nbaId}.png`
         : "https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg";
-    //sets up style based on comparison
+    //sets up style based on comparison, red is lower, green is higher
     const getStatStyle = (statKey) => {
         if (!comparisonPlayer) return "";
         const val1 = player[statKey];
@@ -240,9 +239,10 @@ function renderPlayerCard(elementId, player, comparisonPlayer) {
 
         if (val1 > val2) return 'style="color: green; font-weight: bold;"';
         if (val1 < val2) return 'style="color: red;"';
+        //black if there is a tie
         return "";
     };
-    //render the table based on the stat colors
+    //render the list based on the stat colors
     container.innerHTML = `
         <div class="player-card">
             <img 
@@ -253,7 +253,7 @@ function renderPlayerCard(elementId, player, comparisonPlayer) {
 
             <h2>${player.PLAYER_NAME}</h2>
             <p><strong>Season:</strong> ${player.SEASON_YEAR || "N/A"}</p>
-
+    
             <ul style="list-style:none;padding:0;">
                 <li ${getStatStyle('GP')}><strong>Games:</strong> ${player.GP}</li>
                 <li ${getStatStyle('PTS')}><strong>Points:</strong> ${player.PTS}</li>
@@ -261,7 +261,7 @@ function renderPlayerCard(elementId, player, comparisonPlayer) {
                 <li ${getStatStyle('AST')}><strong>Assists:</strong> ${player.AST}</li>
                 <li ${getStatStyle('STL')}><strong>Steals:</strong> ${player.STL}</li>
                 <li ${getStatStyle('FG_PCT')}><strong>FG%:</strong> ${(player.FG_PCT * 100).toFixed(1)}%</li>
-                <li><strong>Minutes:</strong> ${player.MIN_SEC}</li>
+                 <li ${getStatStyle('MIN_SEC')}><strong>Minutes:</strong> ${player.MIN_SEC}</li>
             </ul>
         </div>
     `;
@@ -286,7 +286,7 @@ async function submitPlayerClick() {
     }
 
     searchMessage.innerText = "Loading...";
-
+    //get the season for the year
     const season = await loadSeason(year);
 
     nbaData = season.games;
@@ -302,7 +302,7 @@ function search(term) {
     const searchTerm = term.toLowerCase();
     const searchMessage = document.getElementById("searchMessage");
     const year = parseInt(document.getElementById("year").value);
-
+    //this starts the season in october and ends in june 30th of next year
     const seasonStart = new Date(year, 9, 1);
     const seasonEnd = new Date(year + 1, 5, 30);
 

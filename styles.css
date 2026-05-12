@@ -104,12 +104,11 @@ nav ul li:hover a {
 
 table {
     width: 90%;
-    border-collapse: separate;
-    border-spacing: 0;
+    overflow-y: auto;
     margin: 20px auto;
     background: white;
     border-radius: 12px;
-    overflow: hidden;
+    border-collapse: collapse;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
 }
 
@@ -118,11 +117,23 @@ thead {
     color: white;
 }
 
+
 th,
 td {
     padding: 15px;
     text-align: left;
     border-bottom: 1px solid #f0f0f0;
+}
+
+th {
+    position: -webkit-sticky; 
+    position: sticky;   
+     top: 0;
+    position: -webkit-sticky;
+  background: linear-gradient(135deg, #ff8a00, #ff5722);
+  z-index: 10;
+
+
 }
 
 tbody tr:hover {
@@ -209,8 +220,8 @@ tbody tr:hover {
     }
 
     #imgDiv img {
-       width: 75%;
-       height: 75%;
+        width: 75%;
+        height: 75%;
     }
 
     .search-area label,
