@@ -1,25 +1,11 @@
-
-let nbaData = [];
+//global for storing data
 let playerData = [];
-let apiData = [];
-
+let nbaData=[];
 const seasonCache = {};
 let nbaTeamIds = {};
-let liveDataLoaded = false;
 let playerPhotos = {};
 
-const API_KEY = '75d593d10d0e92056e834e5b58bd72e8';
-const base_url = 'https://v1.basketball.api-sports.io';
-const nba_league_id = 12;
-const current_season = '2024-2025';
 
-const requestOptions = {
-    method: "GET",
-    headers: {
-        "x-rapidapi-key": API_KEY,
-        "x-rapidapi-host": "v1.basketball.api-sports.io"
-    }
-};
 
 
 document.addEventListener("DOMContentLoaded", init);
@@ -41,6 +27,7 @@ async function init() {
 //loading team ID json for photos
 async function loadTeamIds() {
     try {
+        //this stores NBA ids for photos
         const response = await fetch("/json/nba_team_id.json");
         nbaTeamIds = await response.json();
     } catch (error) {
@@ -48,7 +35,7 @@ async function loadTeamIds() {
     }
 }
 
-//caching for season
+//caching for season, makes loading faster
 async function loadSeason(year) {
     if (seasonCache[year]) return seasonCache[year];
 
@@ -70,58 +57,6 @@ async function loadSeason(year) {
     }
 }
 
-
-async function loadLiveData() {
-    if (liveDataLoaded) return;
-
-    try {
-        //getting the season API call
-        const [gamesRes, oddsRes, playerRes] = await Promise.all([
-            fetch(`${base_url}/games?league=${nba_league_id}&season=${current_season}`, requestOptions),
-            fetch(`${base_url}/odds?league=${nba_league_id}&season=${current_season}`, requestOptions),
-            fetch(`${base_url}/players?league=${nba_league_id}&season=${current_season}`, requestOptions)
-        ]);
-
-        const gamesData = await gamesRes.json();
-        const oddsData = await oddsRes.json();
-        const livePlayerData = await playerRes.json();
-
-        // Cache player photos
-        livePlayerData.response.forEach(p => {
-            const nbaId =
-                p.id ||
-                p.player_id ||
-                p.nba_id ||
-                p.player?.id ||
-                p.player?.player_id ||
-                null;
-
-            playerPhotos[p.id] = nbaId
-                ? `https://cdn.nba.com/headshots/nba/latest/260x190/${nbaId}.png`
-                : "https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg";
-        });
-
-        apiData = gamesData.response.map(game => {
-            const gameOdds = oddsData.response?.find(o => o.game.id === game.id);
-
-            return {
-                GAME_ID: game.id,
-                GAME_DATE: game.date,
-                TEAM_NAME: `${game.teams.home.name} vs ${game.teams.away.name}`,
-                STATUS: game.status.long,
-                SCORE: `${game.scores.home.total} - ${game.scores.away.total}`,
-                HOME_LOGO: `https://cdn.nba.com/logos/nba/${game.teams.home.id}/global/L/logo.svg`,
-                AWAY_LOGO: `https://cdn.nba.com/logos/nba/${game.teams.away.id}/global/L/logo.svg`
-            };
-        });
-
-        renderLiveGames(apiData);
-        liveDataLoaded = true;
-    } catch (error) {
-        console.log(`Error loading live data: ${error}`);
-    }
-}
-
 //computes stats for player averages
 function computeSeasonAverages(games) {
     if (!games.length) return null;
@@ -129,7 +64,7 @@ function computeSeasonAverages(games) {
     const gp = games.length;
     const sum = key =>
         games.reduce((total, game) => total + (Number(game[key]) || 0), 0);
-
+//add up stats
     const totalFGM = sum("FGM");
     const totalFGA = sum("FGA");
     const totalFG3M = sum("FG3M");
@@ -174,6 +109,7 @@ async function comparePlayers() {
     const name1 = p1Input?.value.trim().toLowerCase();
     const name2 = p2Input?.value.trim().toLowerCase();
 
+    //make sure the inputs are valid
     if (!name1 || !name2) {
         errorDiv.innerText = "Please enter two player names to compare.";
         return;
@@ -231,7 +167,7 @@ function renderPlayerCard(elementId, player, comparisonPlayer) {
     const photo = nbaId
         ? `https://cdn.nba.com/headshots/nba/latest/260x190/${nbaId}.png`
         : "https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg";
-    //sets up style based on comparison, red is lower, green is higher
+    //sets up style based on comparison, red is lower, green is higher, statKey is the value to look for
     const getStatStyle = (statKey) => {
         if (!comparisonPlayer) return "";
         const val1 = player[statKey];
@@ -292,7 +228,6 @@ async function submitPlayerClick() {
     nbaData = season.games;
     playerData = season.players;
 
-    //  await loadLiveData();
 
     search(searchInput);
 }
@@ -332,7 +267,7 @@ function search(term) {
 
         const matchesTerm =
             player.PLAYER_NAME.toLowerCase().includes(searchTerm);
-
+        //find matching season
         const matchesSeason =
             gameDate >= seasonStart &&
             gameDate <= seasonEnd;
@@ -340,7 +275,7 @@ function search(term) {
         const playerAbbr = player.TEAM_ABBREVIATION;
 
         const matchupParts = player.MATCHUP.split(" ");
-
+        //look for the player's opponent
         const opponentAbbr = matchupParts.find(
             part =>
                 part !== playerAbbr &&
@@ -349,7 +284,7 @@ function search(term) {
         );
 
         const opponentId = nbaTeamIds[opponentAbbr];
-
+        //get the player's icon
         player.HOME_LOGO =
             `https://cdn.nba.com/logos/nba/${player.TEAM_ID}/global/L/logo.svg`;
 
@@ -360,10 +295,7 @@ function search(term) {
         return matchesTerm && matchesSeason;
     });
 
-    const filteredApiGames = apiData.filter(game =>
-        game.TEAM_NAME.toLowerCase().includes(searchTerm)
-    );
-
+    //combine results
     const allResults = filteredPlayers.concat(filteredTeams);
 
     renderTable(allResults.slice(0, 50));
@@ -372,7 +304,6 @@ function search(term) {
         searchMessage.innerText = `No results found for ${term}`;
     }
 
-    // renderLiveGames(filteredApiGames);
 }
 
 function renderTable(data) {
@@ -381,9 +312,9 @@ function renderTable(data) {
 
     headerRow.innerHTML = "";
     tableBody.innerHTML = "";
-
+    //if table is empty
     if (!data.length) return;
-
+    //set up colums depending on player or team
     const columns = data[0].PLAYER_NAME
         ? [
             "PLAYER_NAME",
@@ -406,13 +337,13 @@ function renderTable(data) {
             "AST",
             "WL"
         ];
-
+    //render each of the columns
     columns.forEach(col => {
         const th = document.createElement("th");
         th.innerText = col.replace("_", " ");
         headerRow.appendChild(th);
     });
-
+    //render each row and logo for the team
     data.forEach(row => {
         const tr = document.createElement("tr");
 
@@ -431,37 +362,5 @@ function renderTable(data) {
         });
 
         tableBody.appendChild(tr);
-    });
-}
-
-
-function renderLiveGames(games) {
-    const liveDiv = document.getElementById("liveGames");
-
-    if (!liveDiv) return;
-
-    liveDiv.innerHTML = "";
-
-    games.forEach(game => {
-        const card = document.createElement("div");
-
-        card.className = "game-card";
-
-        card.innerHTML = `
-            <p>${game.GAME_DATE.split("T")[0]}</p>
-
-            <div>
-                <img width="40" src="${game.HOME_LOGO}">
-                vs
-                <img width="40" src="${game.AWAY_LOGO}">
-            </div>
-
-            <p>${game.TEAM_NAME}</p>
-            <p>Score: ${game.SCORE}</p>
-            <p>${game.STATUS}</p>
-            <p>Odds: ${game.ODDS}</p>
-        `;
-
-        liveDiv.appendChild(card);
     });
 }
