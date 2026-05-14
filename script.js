@@ -1,7 +1,5 @@
 let nbaData = [];
 let playerData = [];
-let apiData = [];
-
 
 const seasonCache = {};
 let nbaTeamIds = {};
@@ -256,6 +254,25 @@ async function comparePlayers() {
 
     //compute averages and render player cards
     errorDiv.innerText = "";
+    //check if a player was not found (this is if the user changes the year after searching)
+    if (r1.rows.length === 0) {
+        errorDiv.innerText = `${name1} not found`;
+        //render a blank card to clear out the old one
+        renderPlayerCard("player1Card", null, null);
+
+    }
+    if (r2.rows.length === 0) {
+        errorDiv.innerText = `${name2} not found`;
+        renderPlayerCard("player2Card", null, null);
+
+    }
+    //if both players don't exist
+    if (r1.rows.length === 0 && r2.rows.length === 0) {
+        errorDiv.innerText = `${name1} and ${name2} not found`;
+        renderPlayerCard("player1Card", null, null);
+        renderPlayerCard("player2Card", null, null);
+
+    }
     const player1Data = computeSeasonAverages(r1.rows);
     const player2Data = computeSeasonAverages(r2.rows);
     renderPlayerCard("player1Card", player1Data, player2Data);
@@ -267,6 +284,9 @@ async function comparePlayers() {
 
 function renderPlayerCard(elementId, player, comparisonPlayer) {
     const container = document.getElementById(elementId);
+    //render a blank card
+    if (!player) container.innerHTML = "";
+
     if (!container || !player) return;
     //make sure data exists
     const nbaId =
@@ -348,10 +368,6 @@ async function submitPlayerClick() {
 
     nbaData = season.games;
     playerData = season.players;
-
-
-
-
     search(searchInput);
 }
 
@@ -391,7 +407,7 @@ function search(term) {
 
 
 
-
+    //player filtering
     const filteredPlayers = playerData.filter(player => {
         const gameDate = new Date(player.GAME_DATE);
 
@@ -434,10 +450,6 @@ function search(term) {
         return matchesTerm && matchesSeason;
     });
 
-
-    const filteredApiGames = apiData.filter(game =>
-        game.TEAM_NAME.toLowerCase().includes(searchTerm)
-    );
 
 
     const allResults = filteredPlayers.concat(filteredTeams);

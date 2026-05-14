@@ -19,14 +19,15 @@
   <form>
     <h2>Get the stats about your favorite NBA Basketball Players from 2004!</h2><br>
     <div id="imgDiv">
-      <img alt="Stephen Curry attempting to score a field goal at the 2022 NBA All-Star Game" src="/images/home-image.jpg">
+      <img alt="Stephen Curry attempting to score a field goal at the 2022 NBA All-Star Game"
+        src="/images/home-image.jpg">
     </div>
     <div class="PlayerStats">
-     <label for="searchInput">Team/Player Name:</label>
-     <input type="text" id="searchInput" name="playerName" list="searchSuggestions" autocomplete="off" required>
-     <datalist id="searchSuggestions"></datalist>
       <label for="year">Year</label>
       <input type="number" id="year" min="2004" value="2004" max="2025">
+      <label for="searchInput">Team/Player Name:</label>
+      <input type="text" id="searchInput" name="playerName" list="searchSuggestions" autocomplete="off" required>
+      <datalist id="searchSuggestions"></datalist>
       <p id="searchMessage"></p>
       <button id="submitPlayer" type="button">Get Stats</button><br>
     </div>

@@ -1,53 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <link rel="icon" href="images/icon.png" type="image/x-icon">
-   <title>NBA Stats Player Comparison</title>
-   <meta charset="UTF-8">
-   <link rel="stylesheet" href="styles.css">
-   <script src="script.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="images/icon.png" type="image/x-icon">
+    <title>NBA Stats Player Comparison</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js"></script>
 </head>
- 
+
 <body>
-   <nav>
-       <ul>
-           <li><a href="index.html">Home</a></li>
-           <li><a href="player_compare.html">Compare Players</a></li>
-       </ul>
-   </nav>
-   <h1>NBA Player Stats</h1>
- 
-   <h2>Player Comparison</h2>
-   <h2>Compare your favorite NBA player!</h2>
-   <div id="imgDiv">
-       <img alt="2021 photo of Anthony Davis from the Los Angeles Lakers trying to block Rui Hachimura of the Washington Wizards." src="/images/compare-image.jpg">
-   </div>
- 
-   <div class="search-area">
-       <input type="text" id="p1Input" placeholder="First Player (full name)" list="p1Suggestions" autocomplete="off">
-       <datalist id="p1Suggestions"></datalist>
-       <label for="p1Year">Year for Player 1</label>
-       <input type="number" id="p1Year" min="2004" max="2025" value="2024">
- 
-       <input type="text" id="p2Input" placeholder="Second Player (full name)" list="p2Suggestions" autocomplete="off">
-       <datalist id="p2Suggestions"></datalist>
-       <label for="p2Year">Year for Player 2</label>
-       <input type="number" id="p2Year" min="2004" max="2025" value="2024">
- 
-       <div id="errorDiv"></div>
-       <button id="compareBtn">Compare Stats</button>
-   </div>
- 
-   <div id="compareGrid">
-       <div id="player1Card" class="card">
-           <div class="statsContainer" id="player1Stats"></div>
-       </div>
- 
-       <div id="player2Card" class="card">
-           <div class="statsContainer" id="player2Stats"></div>
-       </div>
-   </div>
- 
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="player_compare.html">Compare Players</a></li>
+        </ul>
+    </nav>
+    <h1>NBA Player Stats</h1>
+
+    <h2>Player Comparison</h2>
+    <h2>Compare your favorite NBA player!</h2>
+    <div id="imgDiv">
+        <img alt="2021 photo of Anthony Davis from the Los Angeles Lakers trying to block Rui Hachimura of the Washington Wizards."
+            src="/images/compare-image.jpg">
+    </div>
+
+    <div class="search-area">
+        <label for="p1Year">Year for Player 1</label>
+        <input type="number" id="p1Year" min="2004" max="2025" value="2024">
+        <input type="text" id="p1Input" placeholder="First Player (full name)" list="p1Suggestions" autocomplete="off">
+        <datalist id="p1Suggestions"></datalist>
+
+        <label for="p2Year">Year for Player 2</label>
+        <input type="number" id="p2Year" min="2004" max="2025" value="2024">
+        <input type="text" id="p2Input" placeholder="Second Player (full name)" list="p2Suggestions" autocomplete="off">
+        <datalist id="p2Suggestions"></datalist>
+
+
+        <div id="errorDiv"></div>
+        <button id="compareBtn">Compare Stats</button>
+    </div>
+
+    <div id="compareGrid">
+        <div id="player1Card" class="card">
+            <div class="statsContainer" id="player1Stats"></div>
+        </div>
+
+        <div id="player2Card" class="card">
+            <div class="statsContainer" id="player2Stats"></div>
+        </div>
+    </div>
+
 </body>
+
 </html>
